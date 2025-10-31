@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ubicación en tiempo real - Firebase + Mapbox</title>
+
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f8fb;
+      text-align: center;
+    }
+    h1 {
+      background: #0078A8;
+      color: white;
+      padding: 10px;
+      margin: 0;
+    }
+    #map {
+      width: 90%;
+      height: 500px;
+      margin: 20px auto;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    #info {
+      background: white;
+      width: 80%;
+      margin: 10px auto;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+
+<body>
+<h1>Ubicación en tiempo real</h1>
+<div id="map"></div>
+
+<div id="info">
+  <p><strong>ID:</strong> <span id="id">Esperando...</span></p>
+  <p><strong>Latitud:</strong> <span id="lat">--</span></p>
+  <p><strong>Longitud:</strong> <span id="lon">--</span></p>
+  <p><strong>Hora:</strong> <span id="hora">--</span></p>
+</div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD4mNe548KCo04UbpIPWTjs2kI3ieekTx4",
+  authDomain: "mapa-3c325.firebaseapp.com",
+  databaseURL: "https://mapa-3c325-default-rtdb.firebaseio.com",
+  projectId: "mapa-3c325",
+  storageBucket: "mapa-3c325.firebasestorage.app",
+  messagingSenderId: "424352505469",
+  appId: "1:424352505469:web:26cadf3ae5b5143777db14",
+  measurementId: "G-71GKDDTQWG"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+mapboxgl.accessToken = 'pk.eyJ1IjoiY2hleHhvbyIsImEiOiJjbWhldGxqbXkwM2Q5Mmlwemd0dzN2N3RnIn0.GTA2Z9-w_79fnjJW8equig';
+
+window.onload = () => {
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v11',
+    center: [-68.1193, -16.5000],
+    zoom: 13
+  });
+  map.addControl(new mapboxgl.NavigationControl());
+
+  const marker = new mapboxgl.Marker({ color: 'red' });
+  let firstUpdate = true;
+
+  const ubicacionRef = ref(db, "Ubicaciones");
+
+  onValue(ubicacionRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return; // Si no hay datos, no hacer nada
+
+    const keys = Object.keys(data);
+    const lastKey = keys[keys.length - 1];
+    const ultima = data[lastKey];
+
+    // Verificación estricta de lat/lon
+    const lat = parseFloat(ultima.latitud);
+    const lon = parseFloat(ultima.longitud);
+
+    if (!isNaN(lat) && !isNaN(lon)) {
+      marker.setLngLat([lon, lat]).addTo(map);
+      if (firstUpdate) {
+        map.setCenter([lon, lat]);
+        firstUpdate = false;
+      }
+      document.getElementById("id").textContent = ultima.idDispositivo || "Desconocido";
+      document.getElementById("lat").textContent = lat.toFixed(5);
+      document.getElementById("lon").textContent = lon.toFixed(5);
+      document.getElementById("hora").textContent = ultima.hora || "--";
+    }
+  });
+};
+</script>
+</body>
+</html>
