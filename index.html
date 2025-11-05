@@ -8,40 +8,15 @@
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f6f8fb;
-      text-align: center;
-    }
-    h1 {
-      background: #0078A8;
-      color: white;
-      padding: 10px;
-      margin: 0;
-    }
-    #map {
-      width: 90%;
-      height: 500px;
-      margin: 20px auto;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-    #info {
-      background: white;
-      width: 80%;
-      margin: 10px auto;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f6f8fb; text-align: center; }
+    h1 { background: #0078A8; color: white; padding: 10px; margin: 0; }
+    #map { width: 90%; height: 500px; margin: 20px auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    #info { background: white; width: 80%; margin: 10px auto; padding: 10px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
   </style>
 </head>
-
 <body>
 <h1>Ubicación en tiempo real</h1>
 <div id="map"></div>
-
 <div id="info">
   <p><strong>ID:</strong> <span id="id">Esperando...</span></p>
   <p><strong>Latitud:</strong> <span id="lat">--</span></p>
@@ -52,64 +27,70 @@
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+  // 🔹 Importar Firebase correctamente
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD4mNe548KCo04UbpIPWTjs2kI3ieekTx4",
-  authDomain: "mapa-3c325.firebaseapp.com",
-  databaseURL: "https://mapa-3c325-default-rtdb.firebaseio.com",
-  projectId: "mapa-3c325",
-  storageBucket: "mapa-3c325.firebasestorage.app",
-  messagingSenderId: "424352505469",
-  appId: "1:424352505469:web:26cadf3ae5b5143777db14",
-  measurementId: "G-71GKDDTQWG"
-};
+  // Configuración de Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMcViYmKEKiwqREO8zSt1QXKYF2SgIfiA",
+    authDomain: "mapa-b374f.firebaseapp.com",
+    databaseURL: "https://mapa-b374f-default-rtdb.firebaseio.com",
+    projectId: "mapa-b374f",
+    storageBucket: "mapa-b374f.firebasestorage.app",
+    messagingSenderId: "979846724625",
+    appId: "1:979846724625:web:03e8d9706c1bcaf5e985b0",
+    measurementId: "G-VPZBG436FL"
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+  // Inicializar Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app); // 🔹 Aquí creamos la referencia a la base de datos
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiY2hleHhvbyIsImEiOiJjbWhldGxqbXkwM2Q5Mmlwemd0dzN2N3RnIn0.GTA2Z9-w_79fnjJW8equig';
+  // 🔹 Token de Mapbox
+  mapboxgl.accessToken = 'pk.eyJ1IjoiY2hleHhvbyIsImEiOiJjbWhldGxqbXkwM2Q5Mmlwemd0dzN2N3RnIn0.GTA2Z9-w_79fnjJW8equig';
 
-window.onload = () => {
-  const map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/streets-v11',
-    center: [-68.1193, -16.5000],
-    zoom: 13
-  });
-  map.addControl(new mapboxgl.NavigationControl());
+  window.onload = () => {
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [-68.1193, -16.5000],
+      zoom: 13
+    });
+    map.addControl(new mapboxgl.NavigationControl());
 
-  const marker = new mapboxgl.Marker({ color: 'red' });
-  let firstUpdate = true;
+    let marker = null;
 
-  const ubicacionRef = ref(db, "Ubicaciones");
+    // 🔹 Referencia a la carpeta "Ubicaciones" en Firebase
+    const ubicacionRef = ref(db, "Ubicaciones");
 
-  onValue(ubicacionRef, (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return; // Si no hay datos, no hacer nada
+    onValue(ubicacionRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
 
-    const keys = Object.keys(data);
-    const lastKey = keys[keys.length - 1];
-    const ultima = data[lastKey];
+      const keys = Object.keys(data);
+      const lastKey = keys[keys.length - 1];
+      const ultima = data[lastKey];
 
-    // Verificación estricta de lat/lon
-    const lat = parseFloat(ultima.latitud);
-    const lon = parseFloat(ultima.longitud);
+      const lat = parseFloat(ultima.latitud);
+      const lon = parseFloat(ultima.longitud);
 
-    if (!isNaN(lat) && !isNaN(lon)) {
-      marker.setLngLat([lon, lat]).addTo(map);
-      if (firstUpdate) {
-        map.setCenter([lon, lat]);
-        firstUpdate = false;
+      if (!isNaN(lat) && !isNaN(lon)) {
+        // Crear o actualizar marcador
+        if (!marker) {
+          marker = new mapboxgl.Marker({ color: 'red' }).setLngLat([lon, lat]).addTo(map);
+          map.setCenter([lon, lat]);
+        } else {
+          marker.setLngLat([lon, lat]);
+        }
+
+        document.getElementById("id").textContent = ultima.idDispositivo || "Desconocido";
+        document.getElementById("lat").textContent = lat.toFixed(5);
+        document.getElementById("lon").textContent = lon.toFixed(5);
+        document.getElementById("hora").textContent = ultima.hora || "--";
       }
-      document.getElementById("id").textContent = ultima.idDispositivo || "Desconocido";
-      document.getElementById("lat").textContent = lat.toFixed(5);
-      document.getElementById("lon").textContent = lon.toFixed(5);
-      document.getElementById("hora").textContent = ultima.hora || "--";
-    }
-  });
-};
+    });
+  };
 </script>
 </body>
 </html>
