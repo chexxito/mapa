@@ -27,11 +27,9 @@
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
 <script type="module">
-  // 🔹 Importar Firebase correctamente
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-  // Configuración de Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyAMcViYmKEKiwqREO8zSt1QXKYF2SgIfiA",
     authDomain: "mapa-b374f.firebaseapp.com",
@@ -43,11 +41,9 @@
     measurementId: "G-VPZBG436FL"
   };
 
-  // Inicializar Firebase
   const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app); // 🔹 Aquí creamos la referencia a la base de datos
+  const db = getDatabase(app);
 
-  // 🔹 Token de Mapbox
   mapboxgl.accessToken = 'pk.eyJ1IjoiY2hleHhvbyIsImEiOiJjbWhldGxqbXkwM2Q5Mmlwemd0dzN2N3RnIn0.GTA2Z9-w_79fnjJW8equig';
 
   window.onload = () => {
@@ -61,23 +57,20 @@
 
     let marker = null;
 
-    // 🔹 Referencia a la carpeta "Ubicaciones" en Firebase
-    const ubicacionRef = ref(db, "Ubicaciones/c02662f7eceb5744");
+    // Tu device ID
+    const deviceId = "c02662f7eceb5744";
 
+    // Referencia directa a la carpeta del dispositivo
+    const ubicacionRef = ref(db, `Ubicaciones/${deviceId}`);
 
     onValue(ubicacionRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) return;
 
-      const keys = Object.keys(data);
-      const lastKey = keys[keys.length - 1];
-      const ultima = data[lastKey];
-
-      const lat = parseFloat(ultima.latitud);
-      const lon = parseFloat(ultima.longitud);
+      const lat = parseFloat(data.latitud);
+      const lon = parseFloat(data.longitud);
 
       if (!isNaN(lat) && !isNaN(lon)) {
-        // Crear o actualizar marcador
         if (!marker) {
           marker = new mapboxgl.Marker({ color: 'red' }).setLngLat([lon, lat]).addTo(map);
           map.setCenter([lon, lat]);
@@ -85,14 +78,13 @@
           marker.setLngLat([lon, lat]);
         }
 
-        document.getElementById("id").textContent = ultima.idDispositivo || "Desconocido";
+        document.getElementById("id").textContent = data.idDispositivo || "Desconocido";
         document.getElementById("lat").textContent = lat.toFixed(5);
         document.getElementById("lon").textContent = lon.toFixed(5);
-        document.getElementById("hora").textContent = ultima.hora || "--";
+        document.getElementById("hora").textContent = data.hora || "--";
       }
     });
   };
 </script>
 </body>
 </html>
-
