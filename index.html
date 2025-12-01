@@ -4,41 +4,117 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sergio Soliz Geocercas</title>
-  <link 
-    href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" 
-    rel="stylesheet">
+
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f6f8fb;
+      background: #eef2f5;
       text-align: center;
     }
+
     h1 {
       background: #0078A8;
       color: white;
-      padding: 10px;
+      padding: 15px;
       margin: 0;
+      font-size: 26px;
+      letter-spacing: 1px;
     }
+
     #map {
       width: 90%;
       height: 500px;
       margin: 20px auto;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
     }
+
     #info {
       background: white;
       width: 80%;
       margin: 10px auto;
+      padding: 12px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      font-size: 16px;
+    }
+
+    /* Tarjeta de creación de geocercas */
+    .card {
+      background:white; 
+      width:80%; 
+      margin:20px auto; 
+      padding:15px; 
+      border-radius:12px; 
+      box-shadow:0 3px 12px rgba(0,0,0,0.2);
+      text-align:center;
+    }
+
+    #crear-geocerca {
+      padding: 10px 25px;
+      background:#0078A8;
+      color:white;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:16px;
+      transition:0.2s;
+    }
+
+    #crear-geocerca:hover {
+      background:#005f82;
+    }
+
+    /* Notificación elegante */
+    #noti {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #1b1b1b;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s, transform 0.5s;
+      transform: translateY(-20px);
+      z-index: 99999;
+      font-size: 15px;
+    }
+
+    /* Estado de geocerca */
+    #estado {
+      width: 200px;
+      margin: 15px auto;
       padding: 10px;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      font-size: 18px;
+      font-weight: bold;
+      background: #ddd;
+    }
+
+    .estado-verde { background:#c8f7c5; color:#0a6b14; }
+    .estado-rojo { background:#f7c5c5; color:#7a0b0b; animation: vibrar 0.4s; }
+
+    @keyframes vibrar {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
     }
   </style>
 </head>
+
 <body>
-  <h1>SERGIO HECTOR SOLIZ CALLE GEOCERCAS</h1>
+
+  <h1>SERGIO HECTOR SOLIZ CALLE – SISTEMA DE GEOCERCAS</h1>
+
+  <div id="estado">🟡 Esperando...</div>
 
   <div id="map"></div>
 
@@ -49,26 +125,36 @@
     <p><strong>Hora:</strong> <span id="hora">--</span></p>
   </div>
 
-  <!-- FORMULARIO PARA GEOCERCA DINÁMICA -->
-  <div style="background:white; width:80%; margin:20px auto; padding:15px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
-    <h3>Crear geocerca dinámica</h3>
-    <label>Latitud:</label>
-    <input id="geo-lat" type="number" step="0.000001" placeholder="-16.50"><br><br>
-
-    <label>Longitud:</label>
-    <input id="geo-lon" type="number" step="0.000001" placeholder="-68.12"><br><br>
+  <!-- Tarjeta de creación -->
+  <div class="card">
+    <h3>Nueva geocerca</h3>
 
     <label>Radio (metros):</label>
-    <input id="geo-rad" type="number" step="1" placeholder="30"><br><br>
+    <input id="geo-rad" type="number" step="1" placeholder="30">
 
-    <button id="crear-geocerca" style="padding:10px 20px; background:#0078A8; color:white; border:none; border-radius:5px; cursor:pointer;">
-      Crear geocerca
-    </button>
+    <br><br>
+
+    <button id="crear-geocerca">Activar creación</button>
+
+    <p style="color:#444; font-size:14px; margin-top:10px;">
+      Después de activar, toca en el mapa donde quieras crear la geocerca.
+    </p>
   </div>
 
+  <!-- Notificación -->
+  <div id="noti"></div>
+
+  <!-- Sonido -->
+  <audio id="alerta-sonido">
+    <source src="https://www.soundjay.com/buttons/sounds/beep-07.mp3" type="audio/mpeg">
+  </audio>
+
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
   <script type="module">
-    // --- Firebase actualizado ---
+
+    /* -------------------- FIREBASE -------------------- */
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-analytics.js";
@@ -88,9 +174,13 @@
     const analytics = getAnalytics(app);
     const db = getDatabase(app);
 
-    mapboxgl.accessToken = 'pk.eyJ1IjoiY2hleHhvbyIsImEiOiJjbWltenZhOWUwbmhzM2ZwdTBldHBpbHE3In0.1fqGI7mnI4IjyAqKNtW-dQ';
+    /* -------------------- MAPBOX -------------------- */
+
+    mapboxgl.accessToken =
+    'pk.eyJ1IjoiY2hleHhvbyIsImEiOiJjbWltenZhOWUwbmhzM2ZwdTBldHBpbHE3In0.1fqGI7mnI4IjyAqKNtW-dQ';
 
     window.onload = () => {
+
       const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v11',
@@ -100,9 +190,28 @@
 
       map.addControl(new mapboxgl.NavigationControl());
 
-      // --- VARIABLES DE GEOCERCA DINÁMICA ---
+      /* -------------------- VARIABLES -------------------- */
+
       let geofenceCenter = [-68.1199976, -16.5036126];
-      let geofenceRadius = 30; 
+      let geofenceRadius = 30;
+
+      let modoCrear = false;
+
+      /* -------------------- FUNCIÓN PARA NOTIFICAR -------------------- */
+
+      function notificar(msg) {
+        const n = document.getElementById("noti");
+        n.textContent = msg;
+        n.style.opacity = "1";
+        n.style.transform = "translateY(0)";
+
+        setTimeout(() => {
+          n.style.opacity = "0";
+          n.style.transform = "translateY(-20px)";
+        }, 2500);
+      }
+
+      /* -------------------- FUNCIÓN CÍRCULO -------------------- */
 
       function generarCirculo([lng, lat], radio, puntos = 64) {
         const coords = [];
@@ -119,7 +228,7 @@
       }
 
       map.on('load', () => {
-        // Fuente de geocerca
+
         map.addSource('geofence', {
           type: 'geojson',
           data: {
@@ -131,7 +240,6 @@
           }
         });
 
-        // Capa de geocerca
         map.addLayer({
           id: 'geofence-fill',
           type: 'fill',
@@ -142,47 +250,58 @@
           }
         });
 
-        // --- BOTÓN PARA CREAR UNA NUEVA GEOCERCA ---
+        /* ---------- ACTIVAR CREACIÓN ---------- */
+
         document.getElementById("crear-geocerca").onclick = () => {
-          const lat = parseFloat(document.getElementById("geo-lat").value);
-          const lon = parseFloat(document.getElementById("geo-lon").value);
           const rad = parseFloat(document.getElementById("geo-rad").value);
 
-          if (isNaN(lat) || isNaN(lon) || isNaN(rad)) {
-            alert("Debes ingresar coordenadas válidas.");
+          if (isNaN(rad)) {
+            notificar("❌ Radio inválido");
             return;
           }
 
-          // actualizar valores
-          geofenceCenter = [lon, lat];
           geofenceRadius = rad;
+          modoCrear = true;
+          notificar("📍 Toca en el mapa para crear la geocerca");
+        };
 
-          const nuevaGeocerca = {
+        /* ---------- CREAR LA GEOCERCA ---------- */
+
+        map.on("click", (e) => {
+          if (!modoCrear) return;
+
+          geofenceCenter = [e.lngLat.lng, e.lngLat.lat];
+
+          map.getSource("geofence").setData({
             type: "Feature",
             geometry: {
               type: "Polygon",
               coordinates: [generarCirculo(geofenceCenter, geofenceRadius)]
             }
-          };
+          });
 
-          map.getSource("geofence").setData(nuevaGeocerca);
+          modoCrear = false;
 
-          map.flyTo({ center: [lon, lat], zoom: 16 });
+          notificar("✅ Geocerca creada correctamente");
+        });
 
-          alert("✅ Nueva geocerca creada correctamente.");
-        };
       });
 
-      // Función para medir distancia
+      /* -------------------- DISTANCIA -------------------- */
+
       function distanciaMetros(lat1, lon1, lat2, lon2) {
         const R = 6371000;
         const toRad = x => x * Math.PI / 180;
         const dLat = toRad(lat2 - lat1);
         const dLon = toRad(lon2 - lon1);
-        const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+        const a = Math.sin(dLat/2)**2 +
+                  Math.cos(toRad(lat1))*Math.cos(toRad(lat2)) *
+                  Math.sin(dLon/2)**2;
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         return R * c;
       }
+
+      /* -------------------- UBICACIÓN -------------------- */
 
       let marker = null;
       const deviceId = "c02662f7eceb5744";
@@ -199,10 +318,12 @@
 
           if (!marker) {
             marker = new mapboxgl.Marker({ color: 'red' })
-                      .setLngLat([lon, lat])
-                      .addTo(map);
+            .setLngLat([lon, lat])
+            .addTo(map);
+
             map.setCenter([lon, lat]);
-          } else {
+          }
+          else {
             marker.setLngLat([lon, lat]);
           }
 
@@ -211,15 +332,26 @@
           document.getElementById("lon").textContent = lon.toFixed(5);
           document.getElementById("hora").textContent = data.hora || "--";
 
-          // verificar geocerca
           const distancia = distanciaMetros(lat, lon, geofenceCenter[1], geofenceCenter[0]);
+
           if (distancia > geofenceRadius) {
-            alert("⚠️ ¡Has salido de la geocerca!");
+            document.getElementById("estado").textContent = "🔴 Fuera de la geocerca";
+            document.getElementById("estado").className = "estado-rojo";
+
+            document.getElementById("alerta-sonido").play();
+
+            notificar("⚠️ ¡Has salido de la geocerca!");
+          }
+          else {
+            document.getElementById("estado").textContent = "🟢 Dentro de la geocerca";
+            document.getElementById("estado").className = "estado-verde";
           }
         }
       });
+
     };
+
   </script>
+
 </body>
 </html>
-
