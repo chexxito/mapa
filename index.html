@@ -49,6 +49,23 @@
     <p><strong>Hora:</strong> <span id="hora">--</span></p>
   </div>
 
+  <!-- FORMULARIO PARA GEOCERCA DINÁMICA -->
+  <div style="background:white; width:80%; margin:20px auto; padding:15px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+    <h3>Crear geocerca dinámica</h3>
+    <label>Latitud:</label>
+    <input id="geo-lat" type="number" step="0.000001" placeholder="-16.50"><br><br>
+
+    <label>Longitud:</label>
+    <input id="geo-lon" type="number" step="0.000001" placeholder="-68.12"><br><br>
+
+    <label>Radio (metros):</label>
+    <input id="geo-rad" type="number" step="1" placeholder="30"><br><br>
+
+    <button id="crear-geocerca" style="padding:10px 20px; background:#0078A8; color:white; border:none; border-radius:5px; cursor:pointer;">
+      Crear geocerca
+    </button>
+  </div>
+
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
   <script type="module">
     // --- Firebase actualizado ---
@@ -70,7 +87,6 @@
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getDatabase(app);
-    // --- fin Firebase actualizado ---
 
     mapboxgl.accessToken = 'pk.eyJ1IjoiY2hleHhvbyIsImEiOiJjbWltenZhOWUwbmhzM2ZwdTBldHBpbHE3In0.1fqGI7mnI4IjyAqKNtW-dQ';
 
@@ -84,9 +100,9 @@
 
       map.addControl(new mapboxgl.NavigationControl());
 
-      // --- GEOFENCE FIJA ---
-      const geofenceCenter = [-68.1199976, -16.5036126];
-      const geofenceRadius = 30; // metros
+      // --- VARIABLES DE GEOCERCA DINÁMICA ---
+      let geofenceCenter = [-68.1199976, -16.5036126];
+      let geofenceRadius = 30; 
 
       function generarCirculo([lng, lat], radio, puntos = 64) {
         const coords = [];
@@ -103,6 +119,7 @@
       }
 
       map.on('load', () => {
+        // Fuente de geocerca
         map.addSource('geofence', {
           type: 'geojson',
           data: {
@@ -114,6 +131,7 @@
           }
         });
 
+        // Capa de geocerca
         map.addLayer({
           id: 'geofence-fill',
           type: 'fill',
@@ -123,12 +141,41 @@
             'fill-outline-color': 'red'
           }
         });
-      });
-      // --- FIN GEOFENCE ---
 
-      // --- FUNCIONES DE DISTANCIA Y ALERTA ---
+        // --- BOTÓN PARA CREAR UNA NUEVA GEOCERCA ---
+        document.getElementById("crear-geocerca").onclick = () => {
+          const lat = parseFloat(document.getElementById("geo-lat").value);
+          const lon = parseFloat(document.getElementById("geo-lon").value);
+          const rad = parseFloat(document.getElementById("geo-rad").value);
+
+          if (isNaN(lat) || isNaN(lon) || isNaN(rad)) {
+            alert("Debes ingresar coordenadas válidas.");
+            return;
+          }
+
+          // actualizar valores
+          geofenceCenter = [lon, lat];
+          geofenceRadius = rad;
+
+          const nuevaGeocerca = {
+            type: "Feature",
+            geometry: {
+              type: "Polygon",
+              coordinates: [generarCirculo(geofenceCenter, geofenceRadius)]
+            }
+          };
+
+          map.getSource("geofence").setData(nuevaGeocerca);
+
+          map.flyTo({ center: [lon, lat], zoom: 16 });
+
+          alert("✅ Nueva geocerca creada correctamente.");
+        };
+      });
+
+      // Función para medir distancia
       function distanciaMetros(lat1, lon1, lat2, lon2) {
-        const R = 6371000; // metros
+        const R = 6371000;
         const toRad = x => x * Math.PI / 180;
         const dLat = toRad(lat2 - lat1);
         const dLon = toRad(lon2 - lon1);
@@ -137,12 +184,8 @@
         return R * c;
       }
 
-      function mostrarAlerta() {
-        alert("⚠️ ¡Has salido de la geocerca!");
-      }
-
       let marker = null;
-      const deviceId = "7677086aaad7e9f9";
+      const deviceId = "c02662f7eceb5744";
       const ubicacionRef = ref(db, `Ubicaciones/${deviceId}`);
 
       onValue(ubicacionRef, (snapshot) => {
@@ -153,6 +196,7 @@
         const lon = parseFloat(data.longitud);
 
         if (!isNaN(lat) && !isNaN(lon)) {
+
           if (!marker) {
             marker = new mapboxgl.Marker({ color: 'red' })
                       .setLngLat([lon, lat])
@@ -167,10 +211,10 @@
           document.getElementById("lon").textContent = lon.toFixed(5);
           document.getElementById("hora").textContent = data.hora || "--";
 
-          // --- COMPROBAR GEOCERCA ---
+          // verificar geocerca
           const distancia = distanciaMetros(lat, lon, geofenceCenter[1], geofenceCenter[0]);
           if (distancia > geofenceRadius) {
-            mostrarAlerta();
+            alert("⚠️ ¡Has salido de la geocerca!");
           }
         }
       });
@@ -178,6 +222,3 @@
   </script>
 </body>
 </html>
-
-
-
