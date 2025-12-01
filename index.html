@@ -4,88 +4,177 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ubicación en tiempo real - Firebase + Mapbox</title>
-
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-
+  <link 
+    href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" 
+    rel="stylesheet">
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: #f6f8fb; text-align: center; }
-    h1 { background: #0078A8; color: white; padding: 10px; margin: 0; }
-    #map { width: 90%; height: 500px; margin: 20px auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-    #info { background: white; width: 80%; margin: 10px auto; padding: 10px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f8fb;
+      text-align: center;
+    }
+    h1 {
+      background: #0078A8;
+      color: white;
+      padding: 10px;
+      margin: 0;
+    }
+    #map {
+      width: 90%;
+      height: 500px;
+      margin: 20px auto;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    #info {
+      background: white;
+      width: 80%;
+      margin: 10px auto;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
-<h1>SERGIO HECTOR SOLIZ CALLE</h1>
-<div id="map"></div>
-<div id="info">
-  <p><strong>ID:</strong> <span id="id">Esperando...</span></p>
-  <p><strong>Latitud:</strong> <span id="lat">--</span></p>
-  <p><strong>Longitud:</strong> <span id="lon">--</span></p>
-  <p><strong>Hora:</strong> <span id="hora">--</span></p>
-</div>
+  <h1>Ubicación en tiempo real</h1>
 
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <div id="map"></div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+  <div id="info">
+    <p><strong>ID:</strong> <span id="id">Esperando...</span></p>
+    <p><strong>Latitud:</strong> <span id="lat">--</span></p>
+    <p><strong>Longitud:</strong> <span id="lon">--</span></p>
+    <p><strong>Hora:</strong> <span id="hora">--</span></p>
+  </div>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAMcViYmKEKiwqREO8zSt1QXKYF2SgIfiA",
-    authDomain: "mapa-b374f.firebaseapp.com",
-    databaseURL: "https://mapa-b374f-default-rtdb.firebaseio.com",
-    projectId: "mapa-b374f",
-    storageBucket: "mapa-b374f.firebasestorage.app",
-    messagingSenderId: "979846724625",
-    appId: "1:979846724625:web:03e8d9706c1bcaf5e985b0",
-    measurementId: "G-VPZBG436FL"
-  };
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <script type="module">
+    // --- Firebase actualizado ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-analytics.js";
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+    const firebaseConfig = {
+      apiKey: "AIzaSyCtcCm1fQw2-l0MZo7BnwDk3R_1IO5sr2k",
+      authDomain: "mapa-79fbf.firebaseapp.com",
+      databaseURL: "https://mapa-79fbf-default-rtdb.firebaseio.com",
+      projectId: "mapa-79fbf",
+      storageBucket: "mapa-79fbf.firebasestorage.app",
+      messagingSenderId: "765682241790",
+      appId: "1:765682241790:web:f6efeeb7a1ce81682415af",
+      measurementId: "G-8C0P05RTLK"
+    };
 
-  mapboxgl.accessToken = 'pk.eyJ1IjoiY2hleHhvbyIsImEiOiJjbWhldGxqbXkwM2Q5Mmlwemd0dzN2N3RnIn0.GTA2Z9-w_79fnjJW8equig';
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+    // --- fin Firebase actualizado ---
 
-  window.onload = () => {
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [-68.1193, -16.5000],
-      zoom: 13
-    });
-    map.addControl(new mapboxgl.NavigationControl());
+    mapboxgl.accessToken = 'pk.eyJ1IjoiY2hleHhvbyIsImEiOiJjbWltenZhOWUwbmhzM2ZwdTBldHBpbHE3In0.1fqGI7mnI4IjyAqKNtW-dQ';
 
-    let marker = null;
+    window.onload = () => {
+      const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [-68.1193, -16.5000],
+        zoom: 13
+      });
 
-    // Tu device ID
-    const deviceId = "c02662f7eceb5744";
+      map.addControl(new mapboxgl.NavigationControl());
 
-    // Referencia directa a la carpeta del dispositivo
-    const ubicacionRef = ref(db, `Ubicaciones/${deviceId}`);
+      // --- GEOFENCE FIJA ---
+      const geofenceCenter = [-68.1199976, -16.5036126];
+      const geofenceRadius = 30; // metros
 
-    onValue(ubicacionRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
-
-      const lat = parseFloat(data.latitud);
-      const lon = parseFloat(data.longitud);
-
-      if (!isNaN(lat) && !isNaN(lon)) {
-        if (!marker) {
-          marker = new mapboxgl.Marker({ color: 'red' }).setLngLat([lon, lat]).addTo(map);
-          map.setCenter([lon, lat]);
-        } else {
-          marker.setLngLat([lon, lat]);
+      function generarCirculo([lng, lat], radio, puntos = 64) {
+        const coords = [];
+        for (let i = 0; i < puntos; i++) {
+          const ang = i * 2 * Math.PI / puntos;
+          const dx = radio * Math.cos(ang);
+          const dy = radio * Math.sin(ang);
+          const dLng = dx / (111320 * Math.cos(lat * Math.PI / 180));
+          const dLat = dy / 110540;
+          coords.push([lng + dLng, lat + dLat]);
         }
-
-        document.getElementById("id").textContent = data.idDispositivo || "Desconocido";
-        document.getElementById("lat").textContent = lat.toFixed(5);
-        document.getElementById("lon").textContent = lon.toFixed(5);
-        document.getElementById("hora").textContent = data.hora || "--";
+        coords.push(coords[0]);
+        return coords;
       }
-    });
-  };
-</script>
+
+      map.on('load', () => {
+        map.addSource('geofence', {
+          type: 'geojson',
+          data: {
+            type: "Feature",
+            geometry: {
+              type: "Polygon",
+              coordinates: [generarCirculo(geofenceCenter, geofenceRadius)]
+            }
+          }
+        });
+
+        map.addLayer({
+          id: 'geofence-fill',
+          type: 'fill',
+          source: 'geofence',
+          paint: {
+            'fill-color': 'rgba(255,0,0,0.25)',
+            'fill-outline-color': 'red'
+          }
+        });
+      });
+      // --- FIN GEOFENCE ---
+
+      // --- FUNCIONES DE DISTANCIA Y ALERTA ---
+      function distanciaMetros(lat1, lon1, lat2, lon2) {
+        const R = 6371000; // metros
+        const toRad = x => x * Math.PI / 180;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+      }
+
+      function mostrarAlerta() {
+        alert("⚠️ ¡Has salido de la geocerca!");
+      }
+
+      let marker = null;
+      const deviceId = "c02662f7eceb5744";
+      const ubicacionRef = ref(db, `Ubicaciones/${deviceId}`);
+
+      onValue(ubicacionRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        const lat = parseFloat(data.latitud);
+        const lon = parseFloat(data.longitud);
+
+        if (!isNaN(lat) && !isNaN(lon)) {
+          if (!marker) {
+            marker = new mapboxgl.Marker({ color: 'red' })
+                      .setLngLat([lon, lat])
+                      .addTo(map);
+            map.setCenter([lon, lat]);
+          } else {
+            marker.setLngLat([lon, lat]);
+          }
+
+          document.getElementById("id").textContent = data.idDispositivo || "Desconocido";
+          document.getElementById("lat").textContent = lat.toFixed(5);
+          document.getElementById("lon").textContent = lon.toFixed(5);
+          document.getElementById("hora").textContent = data.hora || "--";
+
+          // --- COMPROBAR GEOCERCA ---
+          const distancia = distanciaMetros(lat, lon, geofenceCenter[1], geofenceCenter[0]);
+          if (distancia > geofenceRadius) {
+            mostrarAlerta();
+          }
+        }
+      });
+    };
+  </script>
 </body>
 </html>
-
